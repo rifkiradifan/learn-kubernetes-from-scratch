@@ -5,11 +5,11 @@ My execution plan for this project, broken into phases. I'll check items off as 
 ## Phase 1 — Kubernetes Local: Core Concepts `[LOCAL]`
 > Understand core Kubernetes with hands-on practice
 
-- [ ] Install k3d and create a local cluster
-- [ ] Verify: `kubectl cluster-info` & `kubectl get nodes`
-- [ ] Pod, Node, Cluster — difference from plain Docker containers
-- [ ] First YAML manifest: deploy a simple Pod
-- [ ] Labels & Selectors — the glue that connects Deployment → Pod → Service
+- [x] Install k3d and create a local cluster
+- [x] Verify: `kubectl cluster-info` & `kubectl get nodes`
+- [x] Pod, Node, Cluster — difference from plain Docker containers
+- [x] First YAML manifest: deploy a simple Pod
+- [x] Labels & Selectors — the glue that connects Deployment → Pod → Service
 - [ ] Deployment & ReplicaSet
 - [ ] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
 - [ ] Service — ClusterIP, NodePort, LoadBalancer

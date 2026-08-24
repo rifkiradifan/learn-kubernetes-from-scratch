@@ -58,6 +58,38 @@ not available yet
 
 ---
 
+## Troubleshooting
+
+### `kubectl` times out connecting to `host.docker.internal` (Windows)
+
+After `k3d cluster create`, `kubectl cluster-info` / `kubectl get nodes` hangs and fails with a `dial tcp ... connectex: ... failed to respond` error targeting `host.docker.internal:<port>`.
+
+**Cause:** k3d writes the kubeconfig server address as `host.docker.internal`, which is meant to be resolved *from inside a container* back to the host machine. On Windows this hostname doesn't reliably resolve when `kubectl` runs directly on the host itself (outside a container).
+
+**Confirm the cluster is actually fine** — find the mapped port for the `*-serverlb` container:
+
+```
+docker ps
+```
+
+Look for a line like `0.0.0.0:<PORT>->6443/tcp   k3d-<cluster-name>-serverlb`, then hit it directly:
+
+```
+curl.exe -k https://localhost:<PORT>/version
+```
+
+A `401 Unauthorized` JSON response is a good sign — the API server is alive and reachable, the client cert just wasn't sent. That confirms the problem is only the `host.docker.internal` address.
+
+**Fix** — point the kubeconfig at `localhost` instead:
+
+```
+kubectl config set-cluster k3d-<cluster-name> --server=https://localhost:<PORT>
+```
+
+This patches only the `server` field for that cluster entry in the kubeconfig. Likely needs to be repeated after every `k3d cluster create`, since k3d writes `host.docker.internal` again by default.
+
+---
+
 ## Roadmap
 
 Detailed execution roadmap is in [ROADMAP.md](ROADMAP.md).
