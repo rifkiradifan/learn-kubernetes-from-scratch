@@ -10,10 +10,10 @@ My execution plan for this project, broken into phases. I'll check items off as 
 - [x] Pod, Node, Cluster — difference from plain Docker containers
 - [x] First YAML manifest: deploy a simple Pod
 - [x] Labels & Selectors — the glue that connects Deployment → Pod → Service
-- [ ] Deployment & ReplicaSet
-- [ ] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
-- [ ] Service — ClusterIP, NodePort, LoadBalancer
-- [ ] Namespace — isolate dev/staging environments
+- [x] Deployment & ReplicaSet
+- [x] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
+- [x] Service — ClusterIP, NodePort, LoadBalancer
+- [x] Namespace — isolate dev/staging environments
 - [ ] ConfigMap & Secret
 - [ ] kubectl debugging — `logs`, `describe`, `exec`, `get events`
 
