@@ -1,0 +1,42 @@
+# Python (FastAPI app)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+**/secret.yaml
+!**/secret.yaml.example
+kubeconfig*.yaml
+*.pem
+*.key
+
+# Helm
+**/charts/
+*.tgz
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
