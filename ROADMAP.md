@@ -20,7 +20,7 @@ My execution plan for this project, broken into phases. I'll check items off as 
 ## Phase 2 — Kubernetes Local: Intermediate `[LOCAL]`
 > Storage, health checks, autoscaling, observability
 
-- [ ] Persistent Volume & PVC
+- [x] Persistent Volume & PVC
 - [ ] Startup, liveness & readiness probe
 - [ ] Resource requests & limits
 - [ ] Gateway API — GatewayClass, Gateway, HTTPRoute

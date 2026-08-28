@@ -19,3 +19,11 @@ spec:
         secretKeyRef:
           name: nginx-secret
           key: DB_PASSWORD
+    volumeMounts:
+    - name: nginx-storage
+      mountPath: /usr/share/nginx/html
+  volumes:
+  - name: nginx-storage
+    persistentVolumeClaim:
+      claimName: nginx-pvc
+  

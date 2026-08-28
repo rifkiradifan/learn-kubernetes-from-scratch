@@ -2,7 +2,7 @@
 
 Hands-on Kubernetes learning journey, from core concepts to cloud deployment.
 
-> Status: Phase 1 (Core Concepts) complete. Pod, Deployment, ReplicaSet, Rolling Update/Rollback, Service (+ CoreDNS), Namespace, ConfigMap & Secret, and kubectl debugging done. Next up: Phase 2 (Persistent Volume & PVC). See [ROADMAP.md](ROADMAP.md) for full progress.
+> Status: Phase 1 (Core Concepts) complete. In Phase 2 (Intermediate) — Persistent Volume & PVC done. Next up: Startup, liveness & readiness probe. See [ROADMAP.md](ROADMAP.md) for full progress.
 
 ---
 
@@ -46,6 +46,7 @@ learn-kubernetes-from-scratch/
 ├── service-nginx.yaml      # ClusterIP Service (Service + CoreDNS)
 ├── configmap-nginx.yaml    # ConfigMap (non-sensitive config)
 ├── secret-nginx.yaml       # Secret (base64-encoded, not encrypted)
+├── pvc-nginx.yaml          # PersistentVolumeClaim (dynamic provisioning via local-path)
 ├── .gitignore
 ├── README.md
 └── ROADMAP.md
