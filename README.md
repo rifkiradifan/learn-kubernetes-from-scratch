@@ -2,7 +2,7 @@
 
 Hands-on Kubernetes learning journey, from core concepts to cloud deployment.
 
-> Status: work in progress — Phase 1 (Core Concepts). Pod, Deployment, ReplicaSet, Rolling Update/Rollback, Service (+ CoreDNS), and Namespace done, currently on ConfigMap & Secret. See [ROADMAP.md](ROADMAP.md) for full progress.
+> Status: Phase 1 (Core Concepts) complete. Pod, Deployment, ReplicaSet, Rolling Update/Rollback, Service (+ CoreDNS), Namespace, ConfigMap & Secret, and kubectl debugging done. Next up: Phase 2 (Persistent Volume & PVC). See [ROADMAP.md](ROADMAP.md) for full progress.
 
 ---
 
@@ -41,9 +41,11 @@ Flat for now — manifests land at the root as each concept is learned, no subfo
 
 ```
 learn-kubernetes-from-scratch/
-├── pod-nginx.yaml          # first Pod manifest (Labels & Selectors)
+├── pod-nginx.yaml          # first Pod manifest (Labels & Selectors, ConfigMap/Secret env injection)
 ├── deployment-nginx.yaml   # Deployment + ReplicaSet (Rolling Update & Rollback)
 ├── service-nginx.yaml      # ClusterIP Service (Service + CoreDNS)
+├── configmap-nginx.yaml    # ConfigMap (non-sensitive config)
+├── secret-nginx.yaml       # Secret (base64-encoded, not encrypted)
 ├── .gitignore
 ├── README.md
 └── ROADMAP.md

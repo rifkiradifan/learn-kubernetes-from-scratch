@@ -14,8 +14,8 @@ My execution plan for this project, broken into phases. I'll check items off as 
 - [x] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
 - [x] Service — ClusterIP, NodePort, LoadBalancer
 - [x] Namespace — isolate dev/staging environments
-- [ ] ConfigMap & Secret
-- [ ] kubectl debugging — `logs`, `describe`, `exec`, `get events`
+- [x] ConfigMap & Secret
+- [x] kubectl debugging — `logs`, `describe`, `exec`, `get events`
 
 ## Phase 2 — Kubernetes Local: Intermediate `[LOCAL]`
 > Storage, health checks, autoscaling, observability
