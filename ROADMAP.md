@@ -37,7 +37,7 @@ My execution plan for this project, broken into phases. I'll check items off as 
 
 - [ ] RBAC — Role, RoleBinding, ClusterRole, ClusterRoleBinding
 - [ ] ServiceAccount — least privilege, bound (expiring) tokens instead of long-lived legacy tokens
-- [ ] Swap k3d's CNI to Calico — Flannel (k3d default) does not enforce NetworkPolicy
+- [ ] Swap k3d's CNI to Cilium — Flannel (k3d default) does not enforce NetworkPolicy
 - [ ] NetworkPolicy — default-deny, then explicit allow rules between namespaces
 - [ ] Pod Security Standards — `pod-security.kubernetes.io` Namespace labels, `restricted` profile (the official replacement for the removed PodSecurityPolicy)
 - [ ] (Bonus) Kyverno or OPA Gatekeeper — enforce the Conventions section in README.md (no `:latest`, resource limits required) automatically via admission policy instead of by hand
