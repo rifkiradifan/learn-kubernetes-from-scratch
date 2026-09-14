@@ -39,8 +39,12 @@ Documents a step-by-step path through Kubernetes — Pods, Deployments, Services
 
 ```
 learn-kubernetes-from-scratch/
-├── manifests/          # raw Kubernetes YAML manifests, numbered in the order they're applied
-│   └── 01-pod.yaml
+├── manifests/                        # raw Kubernetes YAML manifests, numbered in the order they're applied
+│   ├── 01-pod.yaml                    # reference only — superseded by the Deployment below, not applied to the cluster
+│   ├── 02-deployment.yaml
+│   ├── 03-service-clusterip.yaml
+│   ├── 04-service-nodeport.yaml
+│   └── 05-service-loadbalancer.yaml
 ├── README.md
 └── ROADMAP.md
 ```
@@ -85,6 +89,25 @@ Test-NetConnection -ComputerName host.docker.internal -Port <PORT>   # fails
 kubectl config view --minify   # find the PORT and cluster name (e.g. k3d-dev-cluster)
 kubectl config set-cluster k3d-<cluster-name> --server=https://127.0.0.1:<PORT>
 ```
+
+### `Service` of type `LoadBalancer` stuck at `EXTERNAL-IP: <pending>`
+
+**Symptom:** `kubectl get svc` shows `<pending>` indefinitely, and `kubectl get pods -A` shows a `svclb-<service-name>-xxxxx` Pod stuck `Pending` in `kube-system`.
+
+**Cause:** k3d's built-in ServiceLB (Klipper LB) implements `LoadBalancer` by binding the Service's port directly as a `hostPort` on the Node. On a single-node cluster, every `LoadBalancer` Service competes for the same Node's ports — including k3s's default Traefik ingress controller, which claims ports `80`/`443` out of the box. `kubectl describe pod` on the stuck `svclb-*` Pod shows `FailedScheduling: ... node(s) didn't have free ports for the requested pod ports`.
+
+Unlike a real cloud provider (e.g. AWS ELB), where each `LoadBalancer` Service gets its own dedicated external IP, k3d's ServiceLB reuses the single Node IP for all of them — so port collisions here are a local-dev limitation, not something that occurs in production.
+
+**Fix (this project disables Traefik entirely, since traffic routing here goes through Gateway API instead):**
+
+```powershell
+k3d cluster delete dev-cluster
+k3d cluster create dev-cluster --k3s-arg "--disable=traefik@server:0"
+```
+
+(Remember to re-apply the `host.docker.internal` fix above afterwards — it resets on every cluster recreation.)
+
+If you need Traefik disabled but can't recreate the cluster, or hit the same conflict between two of your own `LoadBalancer` Services, use distinct ports per Service instead.
 
 ---
 

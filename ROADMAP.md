@@ -12,7 +12,7 @@ My execution plan for this project, broken into phases. I'll check items off as 
 - [x] Labels & Selectors — the glue that connects Deployment → Pod → Service
 - [ ] Deployment & ReplicaSet
 - [ ] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
-- [ ] Service — ClusterIP, NodePort, LoadBalancer
+- [x] Service — ClusterIP, NodePort, LoadBalancer
 - [ ] Namespace — isolate dev/staging environments
 - [ ] ConfigMap & Secret
 - [ ] kubectl debugging — `logs`, `describe`, `exec`, `get events`
