@@ -10,8 +10,8 @@ My execution plan for this project, broken into phases. I'll check items off as 
 - [x] Pod, Node, Cluster — difference from plain Docker containers
 - [x] First YAML manifest: deploy a simple Pod
 - [x] Labels & Selectors — the glue that connects Deployment → Pod → Service
-- [ ] Deployment & ReplicaSet
-- [ ] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
+- [x] Deployment & ReplicaSet
+- [x] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
 - [x] Service — ClusterIP, NodePort, LoadBalancer
 - [ ] Namespace — isolate dev/staging environments
 - [ ] ConfigMap & Secret
@@ -91,4 +91,3 @@ My execution plan for this project, broken into phases. I'll check items off as 
 
 - Never use `:latest` image tag — always use a specific version (`:v1.0.0`)
 - Never commit real Secret values — use `secret.yaml.example` as a template
-- **Always delete the k3d cluster when not in use** — `k3d cluster delete dev-cluster` to free resources
