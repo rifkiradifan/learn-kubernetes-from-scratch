@@ -2,19 +2,24 @@
 
 Hands-on Kubernetes learning journey, from core concepts to cloud deployment.
 
-> Status: Phase 1 in progress.
+> Status: Phase 0 in progress.
 
 ---
 
 ## What it does
 
-Documents a step-by-step path through Kubernetes — Pods, Deployments, Services, and Namespaces on a local k3d cluster, then storage, health checks and autoscaling, then security fundamentals (RBAC, NetworkPolicy, Pod Security Standards), then Helm + monitoring — before moving to a real AWS EKS cluster provisioned with Terraform and deployed through a GitHub Actions CI/CD pipeline.
+By the end of this project:
+
+- A FastAPI app is packaged with Helm and deployed through GitOps (ArgoCD), with images built, scanned and pushed by GitHub Actions
+- The same manifests run on a local k3d cluster and on AWS EKS — traffic routed through Gateway API, not cloud-specific ingress
+- Security is enforced by the cluster, not by convention: RBAC, default-deny NetworkPolicy, Pod Security Standards, and admission policies
+- All infrastructure — from VPC to EKS — is reproducible with Terraform, and the app is observable with Prometheus + Grafana
 
 ---
 
 ## Why I'm building it
 
-6 years of SRE/Cloud Engineering background, but I'm returning to work after a 5-year break — this rebuilds the Kubernetes mental model from the ground up, phase by phase, instead of relying on rusty muscle memory. The roadmap deliberately mirrors what a real SRE/Cloud Engineer role needs in production: RBAC, NetworkPolicy, autoscaling, backup/restore, IaC — not just toy manifests.
+6 years of SRE/Cloud Engineering background, returning to work after a 5-year break. This project rebuilds hands-on depth on the current Kubernetes ecosystem — Gateway API, EKS Pod Identity, GitOps, admission policy — phase by phase. The roadmap deliberately mirrors what a real SRE/Cloud Engineer role needs in production: RBAC, NetworkPolicy, autoscaling, backup/restore, IaC — not just toy manifests.
 
 ---
 
@@ -26,11 +31,14 @@ Documents a step-by-step path through Kubernetes — Pods, Deployments, Services
 | Container runtime | Docker Desktop |
 | Local container registry | k3d registry (`k3d registry create`) |
 | Cloud cluster | AWS EKS |
-| Cloud registry | AWS ECR (public repo — 50 GB/month free) |
+| Cloud registry | GitHub Container Registry (GHCR) |
 | App | Python (FastAPI) |
-| Ingress / Traffic routing | Gateway API |
+| Package manager | Helm |
+| Traffic routing | Gateway API (Envoy Gateway) |
+| Policy | Pod Security Standards + ValidatingAdmissionPolicy |
 | IaC | Terraform |
-| CI/CD | GitHub Actions |
+| CI | GitHub Actions + Trivy |
+| CD / GitOps | ArgoCD |
 | Monitoring | Prometheus + Grafana |
 
 ---
@@ -48,51 +56,19 @@ not available yet.
 ---
 
 
-## Troubleshooting
+## Debugging highlights
 
-### `kubectl` fails with "connection refused" after `k3d cluster create`
+Real issues hit along the way, each traced from symptom to root cause. Full write-ups in [docs/troubleshooting.md](docs/troubleshooting.md).
 
-**Symptom:**
+- **`kubectl` "connection refused" on a healthy cluster** — kubeconfig pointed at `host.docker.internal`, which resolved to the LAN IP instead of loopback. Isolated with `Test-NetConnection` against both addresses, fixed by pointing kubeconfig at `127.0.0.1`.
+- **`LoadBalancer` Service stuck at `<pending>`** — k3s's ServiceLB binds `hostPort`s on the Node, and Traefik already held ports 80/443. Found via `FailedScheduling` events on the `svclb-*` Pod; fixed by disabling Traefik in favor of Gateway API. A local-dev limitation that doesn't exist on cloud load balancers.
 
-```
-E0914 ... couldn't get current server API group list: Get "https://host.docker.internal:PORT/api?timeout=32s":
-dial tcp <LAN IP>:PORT: connectex: No connection could be made because the target machine actively refused it.
-```
+---
 
-`k3d cluster list` and `docker ps -a` both show the cluster's containers as running/healthy — this is not a cluster startup failure.
+## Conventions
 
-**Cause:** on this machine, `host.docker.internal` resolves to the real WiFi LAN IP (not a reachable loopback address), even though the k3d proxy container correctly maps the API port on `127.0.0.1`. Confirmed with:
-
-```powershell
-Test-NetConnection -ComputerName 127.0.0.1 -Port <PORT>              # succeeds
-Test-NetConnection -ComputerName host.docker.internal -Port <PORT>   # fails
-```
-
-**Fix:** point kubeconfig at `127.0.0.1` instead of `host.docker.internal`. Needed every time the cluster is recreated, since k3d writes `host.docker.internal` into kubeconfig by default.
-
-```powershell
-kubectl config view --minify   # find the PORT and cluster name (e.g. k3d-dev-cluster)
-kubectl config set-cluster k3d-<cluster-name> --server=https://127.0.0.1:<PORT>
-```
-
-### `Service` of type `LoadBalancer` stuck at `EXTERNAL-IP: <pending>`
-
-**Symptom:** `kubectl get svc` shows `<pending>` indefinitely, and `kubectl get pods -A` shows a `svclb-<service-name>-xxxxx` Pod stuck `Pending` in `kube-system`.
-
-**Cause:** k3d's built-in ServiceLB (Klipper LB) implements `LoadBalancer` by binding the Service's port directly as a `hostPort` on the Node. On a single-node cluster, every `LoadBalancer` Service competes for the same Node's ports — including k3s's default Traefik ingress controller, which claims ports `80`/`443` out of the box. `kubectl describe pod` on the stuck `svclb-*` Pod shows `FailedScheduling: ... node(s) didn't have free ports for the requested pod ports`.
-
-Unlike a real cloud provider (e.g. AWS ELB), where each `LoadBalancer` Service gets its own dedicated external IP, k3d's ServiceLB reuses the single Node IP for all of them — so port collisions here are a local-dev limitation, not something that occurs in production.
-
-**Fix (this project disables Traefik entirely, since traffic routing here goes through Gateway API instead):**
-
-```powershell
-k3d cluster delete dev-cluster
-k3d cluster create dev-cluster --k3s-arg "--disable=traefik@server:0"
-```
-
-(Remember to re-apply the `host.docker.internal` fix above afterwards — it resets on every cluster recreation.)
-
-If you need Traefik disabled but can't recreate the cluster, or hit the same conflict between two of your own `LoadBalancer` Services, use distinct ports per Service instead.
+- Never use `:latest` image tag — always use a specific version (`:v1.0.0`)
+- Never commit real Secret values — use `secret.yaml.example` as a template
 
 ---
 

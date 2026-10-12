@@ -1,14 +1,23 @@
 # Roadmap — Learning Kubernetes
 
-My execution plan for this project, broken into phases. I'll check items off as I go.
+Phases 0–6 run entirely on a local k3d cluster (free). All paid AWS work is grouped into Phase 7, so by then every tool is already familiar and the EKS cluster can be destroyed after each session.
+
+## Phase 0 — Setup & App `[LOCAL]`
+> Reproducible local cluster + the app that will be deployed in every later phase
+
+- [ ] Install k3d, kubectl, Helm
+- [ ] k3d config file (`k3d cluster create --config`) — 1 server + 2 agents, Traefik disabled, API on `127.0.0.1`, local registry, pinned k3s version
+- [ ] Verify: `kubectl cluster-info` & `kubectl get nodes` (3 nodes Ready)
+- [ ] Build a minimal FastAPI app — `/` and `/healthz` endpoints
+- [ ] Containerize it — Dockerfile, versioned tag (`:v0.1.0`), non-root user
+- [ ] Push the image to the k3d registry and confirm the cluster can pull it
 
 ## Phase 1 — Kubernetes Local: Core Concepts `[LOCAL]`
 > Understand core Kubernetes with hands-on practice
 
-- [ ] Install k3d and create a local cluster
-- [ ] Verify: `kubectl cluster-info` & `kubectl get nodes`
 - [ ] Pod, Node, Cluster — difference from plain Docker containers
-- [ ] First YAML manifest: deploy a simple Pod
+- [ ] First YAML manifest: deploy a simple Pod (your FastAPI image)
+- [ ] kubectl debugging from day one — `logs`, `describe`, `exec`, `get events`
 - [ ] Labels & Selectors — the glue that connects Deployment → Pod → Service
 - [ ] Deployment & ReplicaSet
 - [ ] Rolling Update & Rollback — `kubectl rollout status`, `kubectl rollout undo`
@@ -24,37 +33,37 @@ My execution plan for this project, broken into phases. I'll check items off as 
 - [ ] ConfigMap as files (volume mount)
 - [ ] Secret — base64 is encoding, not encryption
 - [ ] Config changes — which need a Pod restart, which don't
-- [ ] kubectl debugging — `logs`, `describe`, `exec`, `get events`
 
 ## Phase 2 — Kubernetes Local: Intermediate `[LOCAL]`
-> Storage, health checks, autoscaling, observability
+> Resources, health checks, autoscaling, storage, scheduling, traffic routing
 
+- [ ] Resource requests & limits — QoS classes (Guaranteed/Burstable/BestEffort), what `OOMKilled` means
+- [ ] Startup, liveness & readiness probe — using the app's `/healthz`
+- [ ] Metrics Server (bundled with k3s) & `kubectl top`
+- [ ] Horizontal Pod Autoscaler (HPA) — why it needs `requests` to work
 - [ ] Persistent Volume & PVC
-- [ ] Startup, liveness & readiness probe
-- [ ] Resource requests & limits
-- [ ] Gateway API — GatewayClass, Gateway, HTTPRoute
-- [ ] Metrics Server & `kubectl top`
-- [ ] Horizontal Pod Autoscaler (HPA)
-- [ ] Taints & Tolerations, Node Affinity/Anti-Affinity — control which node a Pod can (or can't) land on
-- [ ] PodDisruptionBudget — keep the app up during voluntary disruption (node drain, cluster upgrade)
+- [ ] StatefulSet — PostgreSQL with automatic PVC
 - [ ] Job & CronJob — batch tasks, scheduled cleanup (the Kubernetes equivalent of Linux cron)
 - [ ] DaemonSet — run one Pod per node (how logging/monitoring agents are deployed)
-- [ ] StatefulSet — PostgreSQL with automatic PVC
+- [ ] Taints & Tolerations, Node Affinity/Anti-Affinity — control which node a Pod can (or can't) land on
+- [ ] PodDisruptionBudget — keep the app up during `kubectl drain` on an agent node
+- [ ] Helm as a consumer — `repo add`, `install`, `upgrade`, `rollback`, overriding values
+- [ ] Gateway API — install Envoy Gateway via Helm, then GatewayClass → Gateway → HTTPRoute
 
 ## Phase 3 — Kubernetes Security Fundamentals `[LOCAL]`
 > RBAC, network isolation, and policy enforcement — security foundations that apply regardless of cloud provider
 
 - [ ] RBAC — Role, RoleBinding, ClusterRole, ClusterRoleBinding
 - [ ] ServiceAccount — least privilege, bound (expiring) tokens instead of long-lived legacy tokens
-- [ ] Swap k3d's CNI to Cilium — Flannel (k3d default) does not enforce NetworkPolicy
-- [ ] NetworkPolicy — default-deny, then explicit allow rules between namespaces
+- [ ] NetworkPolicy — default-deny, then explicit allow rules between namespaces (verify enforcement with k3s's built-in network policy controller)
 - [ ] Pod Security Standards — `pod-security.kubernetes.io` Namespace labels, `restricted` profile (the official replacement for the removed PodSecurityPolicy)
-- [ ] (Bonus) Kyverno or OPA Gatekeeper — enforce the Conventions section in README.md (no `:latest`, resource limits required) automatically via admission policy instead of by hand
+- [ ] ValidatingAdmissionPolicy (built-in, CEL) — enforce the [Conventions](README.md#conventions) (no `:latest`, resource limits required) automatically
+- [ ] (Bonus) Kyverno — same policies, compare with ValidatingAdmissionPolicy
+- [ ] (Bonus) Cilium + Hubble — network flow visibility (requires recreating the cluster with Flannel disabled)
 
-## Phase 4 — Monitoring & Helm `[LOCAL]`
-> Monitor the cluster and package manifests with Helm
+## Phase 4 — Monitoring & Custom Helm Chart `[LOCAL]`
+> Package the app with Helm and monitor the cluster
 
-- [ ] Helm: install, upgrade
 - [ ] Build a custom Helm chart — FastAPI Todo API
 - [ ] Deploy app via `helm install` to the dev namespace
 - [ ] Multi-environment: `values-dev.yaml` (1 replica, HPA off) + `values-prod.yaml` (3 replicas, HPA on)
@@ -62,41 +71,36 @@ My execution plan for this project, broken into phases. I'll check items off as 
 - [ ] Scrape FastAPI metrics — expose `/metrics` + ServiceMonitor
 - [ ] Build a simple Grafana dashboard
 
-## Phase 5 — AWS EKS `[CLOUD — PAID]`
-> Deploy a production-grade cluster in the cloud
+## Phase 5 — CI & GitOps `[LOCAL]`
+> Automate build and deployment like a real company — without paying for a cluster
 
-- [ ] EKS vs self-managed Kubernetes — what AWS manages vs what you manage
-- [ ] Create EKS cluster with `eksctl` — node type `t3.small`
-- [ ] IAM roles & service accounts — EKS Pod Identity (new approach) or IRSA (legacy)
-- [ ] AWS Load Balancer Controller
-- [ ] ECR — build, push & pull images (use public repo to avoid costs)
-- [ ] EBS CSI Driver — persistent storage (default StorageClass: GP3)
-- [ ] Cluster Autoscaler — scale nodes based on pending Pods (learn the concept first)
-- [ ] Karpenter — migrate from Cluster Autoscaler
-- [ ] Secrets Manager + External Secrets Operator
-- [ ] Upgrade the cluster's Kubernetes minor version — practice via `eksctl`/EKS console, understand node group rolling upgrade and the version rollback window
-- [ ] Velero — backup PV snapshots + cluster state to S3, then practice a restore
+- [ ] GitHub Actions — build & push image to GHCR on git push (tag = version / commit SHA)
+- [ ] Scan the image with Trivy in CI — fail the pipeline on critical vulnerabilities
+- [ ] Validate manifests / Helm chart in CI (`helm lint`, kubeconform)
+- [ ] ArgoCD on k3d — cluster auto-syncs from Git
+- [ ] Multi-environment with ArgoCD (dev/staging/prod)
 
-## Phase 6 — GitOps & CI/CD `[CLOUD]`
-> Automate deployments like a real company
-
-- [ ] GitHub Actions — auto build & push to ECR on git push
-- [ ] CD pipeline to EKS via GitHub Actions
-- [ ] Multi-environment pipeline (dev/staging/prod)
-- [ ] (Bonus) ArgoCD — GitOps: cluster auto-syncs from Git
-
-## Phase 7 — Infrastructure as Code (Terraform) `[CLOUD]`
-> All infrastructure reproducible from code
+## Phase 6 — Infrastructure as Code (Terraform) `[LOCAL]`
+> Learn Terraform for free before using it to build paid infrastructure
 
 - [ ] Terraform basics — resource, variable, output, state
-- [ ] VPC with Terraform
-- [ ] EKS cluster with Terraform
+- [ ] Practice against k3d with the Kubernetes/Helm provider
 - [ ] Terraform modules
-- [ ] Remote state in S3 + DynamoDB locking
-- [ ] Full stack: VPC + EKS + RDS via Terraform
+- [ ] Remote state in S3 with native locking (`use_lockfile = true`) — DynamoDB locking is deprecated
 
+## Phase 7 — AWS EKS via Terraform `[CLOUD — PAID]`
+> Production-grade cluster in the cloud — `terraform destroy` at the end of every session
 
-## Conventions
-
-- Never use `:latest` image tag — always use a specific version (`:v1.0.0`)
-- Never commit real Secret values — use `secret.yaml.example` as a template
+- [ ] EKS vs self-managed Kubernetes — what AWS manages vs what you manage (incl. EKS Auto Mode as a comparison)
+- [ ] VPC + EKS cluster with Terraform — node type `t3.medium` (`t3.small` only fits ~11 Pods with the VPC CNI)
+- [ ] IAM for workloads — EKS Pod Identity (recommended) vs IRSA (still common)
+- [ ] AWS Load Balancer Controller — expose Envoy Gateway through an NLB, same HTTPRoute manifests as local
+- [ ] Pull app images from GHCR
+- [ ] EBS CSI Driver — persistent storage (default StorageClass: GP3)
+- [ ] Cluster Autoscaler — concept only (scale nodes based on pending Pods)
+- [ ] Karpenter — node autoscaling in practice
+- [ ] Secrets Manager + External Secrets Operator
+- [ ] Point ArgoCD at EKS — the same Git repo now deploys to the cloud
+- [ ] Upgrade the cluster's Kubernetes minor version — node group rolling upgrade, understand standard vs extended support cost
+- [ ] Velero — backup PV snapshots + cluster state to S3, then practice a restore
+- [ ] (Bonus) Full stack: VPC + EKS + RDS via Terraform
