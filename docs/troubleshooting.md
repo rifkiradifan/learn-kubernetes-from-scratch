@@ -31,6 +31,14 @@ kubectl config set-cluster k3d-<cluster-name> --server=https://127.0.0.1:<PORT>
 
 This has to be repeated every time the cluster is recreated, since k3d rewrites kubeconfig on each `cluster create`.
 
+**Prevention:** pin the API address in the k3d config file. k3d then writes `https://127.0.0.1:6550` into kubeconfig directly, so no manual fix is needed after recreating the cluster (verified with k3d v5.9.0):
+
+```yaml
+kubeAPI:
+  hostIP: "127.0.0.1"
+  hostPort: "6550"
+```
+
 ---
 
 ## `Service` of type `LoadBalancer` stuck at `EXTERNAL-IP: <pending>`

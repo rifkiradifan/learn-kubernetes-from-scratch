@@ -1,0 +1,82 @@
+# ============================================================
+# Secrets & credentials — never commit these
+# ============================================================
+.env
+.env.*
+!.env.example
+
+# Kubernetes Secret manifests with real values (commit *.example templates instead)
+*secret.yaml
+*secret.yml
+*secrets.yaml
+*secrets.yml
+!*.example
+
+# kubeconfig files (contain cluster certs/tokens)
+kubeconfig
+*.kubeconfig
+.kube/
+
+# Private keys & certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# AWS credentials
+.aws/
+
+# ============================================================
+# Python / FastAPI (uv)
+# ============================================================
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# ============================================================
+# Terraform
+# ============================================================
+# .terraform.lock.hcl is intentionally NOT ignored — it pins provider versions
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+# tfvars usually hold environment-specific or secret values
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# ============================================================
+# Helm
+# ============================================================
+# Downloaded chart dependencies (restored with `helm dependency build`; Chart.lock is committed)
+**/charts/*/charts/
+*.tgz
+
+# ============================================================
+# Editors & OS
+# ============================================================
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store

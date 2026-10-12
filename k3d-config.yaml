@@ -1,0 +1,25 @@
+# Versi skema config k3d (v1alpha5 = format untuk k3d v5.x)
+apiVersion: k3d.io/v1alpha5
+kind: Simple                      # "Simple" = format config ringkas k3d
+
+metadata:
+  name: dev-cluster               # nama cluster; kubeconfig context jadi "k3d-dev-cluster"
+
+servers: 1                        # node control plane (otak cluster)
+agents: 2                         # node worker (tempat app-mu jalan)
+
+# Pin versi k3s. Tanpa ini, versi bisa berubah diam-diam saat k3d di-upgrade.
+image: rancher/k3s:v1.35.5-k3s1
+
+# Alamat API server yang diekspos ke laptopmu
+kubeAPI:
+  hostIP: "127.0.0.1"             # ini mencegah masalah host.docker.internal
+  hostPort: "6550"                # port tetap, supaya tidak acak tiap recreate
+
+# Argumen tambahan yang diteruskan ke proses k3s
+options:
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik    # jangan install add-on Traefik bawaan
+        nodeFilters:
+          - server:*              # hanya untuk node server (control plane yang memasang add-on)
